@@ -1,7 +1,7 @@
 import './css/styles.css';
 import { debounce } from 'lodash';
 import Notiflix from 'notiflix';
-import { fetchCountries } from './helpers/fetchCountries';
+import fetchCountries from './helpers/fetchCountries';
 
 const DEBOUNCE_DELAY = 300;
 const refs = {
@@ -56,31 +56,38 @@ const clearCountriesList = () => {
 
 function searchCountry(e) {
   const responseCountry = e.target.value.trim();
-  fetchCountries(responseCountry)
-    .then(response => {
-      if (Number(response.status) === 404) {
+
+  if (responseCountry !== '' && responseCountry !== ' ') {
+    fetchCountries(responseCountry)
+      .then(response => {
+        if (response.length > 10) {
+          Notiflix.Notify.info(
+            'Too many matches found. Please enter a more specific name.'
+          );
+        }
+        if (responseCountry === '') {
+          clearCountryCard();
+          clearCountriesList();
+        }
+        clearCountryCard();
+        clearCountriesList();
+        if (response.length === 1) {
+          renderCountryCard(response);
+          clearCountriesList();
+        } else if (response.length > 1 && response.length <= 10) {
+          renderCountriesList(response);
+          clearCountryCard();
+        }
+      })
+      .catch(error => {
         Notiflix.Notify.failure('Oops, there is no country with that name');
-      }
-      if (response.length > 10) {
-        Notiflix.Notify.info(
-          'Too many matches found. Please enter a more specific name.'
-        );
-      }
-      if (responseCountry === '') {
-        clearCountryCard();
-        clearCountriesList();
-      }
-      clearCountryCard();
-      clearCountriesList();
-      if (response.length === 1) {
-        renderCountryCard(response);
-        clearCountriesList();
-      } else if (response.length > 1 && response.length <= 10) {
-        renderCountriesList(response);
-        clearCountryCard();
-      }
-    })
-    .catch(error => {
-      console.log(error);
-    });
+        // if (Number(error.status) === 404) {
+        //   Notiflix.Notify.failure('Oops, there is no country with that name');
+        // }
+        // console.dir(error);
+      });
+  } else {
+    clearCountriesList();
+    clearCountryCard();
+  }
 }
